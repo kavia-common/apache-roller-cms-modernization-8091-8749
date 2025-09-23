@@ -53,13 +53,13 @@ export default function AdminPage() {
               <div className="flex gap-2">
                 <Button
                   variant="secondary"
-                  onClick={() => UsersAPI.update(u.id, { role: "user" as unknown as User["role"] })}
+                  onClick={() => UsersAPI.update(u.id, { role: "user" })}
                 >
                   Demote
                 </Button>
                 <Button
                   variant="secondary"
-                  onClick={() => UsersAPI.update(u.id, { role: "admin" as unknown as User["role"] })}
+                  onClick={() => UsersAPI.update(u.id, { role: "admin" })}
                 >
                   Promote
                 </Button>
