@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: "export",
+  // Use default server output to enable SSR, ISR, middleware, and route handlers
+  reactStrictMode: true,
 };
 
 export default nextConfig;
