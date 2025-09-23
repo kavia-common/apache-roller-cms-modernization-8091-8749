@@ -9,7 +9,7 @@ export default function DeveloperDocsPage() {
       <p>Access theme state with <code>useThemeSettings()</code> and update settings using CSS variables.</p>
       <h2>Extensibility Hooks</h2>
       <ul>
-        <li>Toaster: <code>useToaster().push({ message, type })</code> for notifications</li>
+        <li>Toaster: <code>useToaster().push(&#123; message, type &#125;)</code> for notifications</li>
         <li>Theme: <code>useThemeSettings().setSettings</code> for live preview</li>
       </ul>
     </article>

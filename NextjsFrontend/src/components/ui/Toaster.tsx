@@ -1,20 +1,33 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useState } from "react";
 import clsx from "clsx";
 
-type Toast = { id: string; message: string; type?: "info" | "success" | "warning" | "error" };
+type ToastType = "info" | "success" | "warning" | "error";
+
+type Toast = { 
+  id: string; 
+  message: string; 
+  type?: ToastType;
+  duration?: number;
+  action?: {
+    label: string;
+    onClick: () => void;
+  };
+};
 
 type ToasterCtx = {
   toasts: Toast[];
   push: (t: Omit<Toast, "id">) => void;
   remove: (id: string) => void;
+  clear: () => void;
 };
 
 const Ctx = createContext<ToasterCtx>({
   toasts: [],
   push: () => {},
   remove: () => {},
+  clear: () => {},
 });
 
 /**
@@ -26,6 +39,29 @@ export function useToaster() {
   return useContext(Ctx);
 }
 
+const ToastIcons = {
+  info: (
+    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clipRule="evenodd" />
+    </svg>
+  ),
+  success: (
+    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.236 4.53L7.53 10.53a.75.75 0 00-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
+    </svg>
+  ),
+  warning: (
+    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+      <path fillRule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+    </svg>
+  ),
+  error: (
+    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clipRule="evenodd" />
+    </svg>
+  )
+};
+
 /**
  * PUBLIC_INTERFACE
  * ToasterProvider
@@ -33,46 +69,132 @@ export function useToaster() {
  */
 export function ToasterProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
-  const push = (t: Omit<Toast, "id">) =>
-    setToasts((prev) => [...prev, { id: crypto.randomUUID(), ...t }]);
+  
+  const push = (t: Omit<Toast, "id">) => {
+    const id = crypto.randomUUID();
+    const toast = { id, duration: 5000, ...t };
+    setToasts((prev) => [...prev, toast]);
+    
+    // Auto-remove after duration
+    setTimeout(() => {
+      remove(id);
+    }, toast.duration);
+  };
+  
   const remove = (id: string) => setToasts((prev) => prev.filter((t) => t.id !== id));
+  
+  const clear = () => setToasts([]);
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setToasts((prev) => prev.slice(1));
-    }, 5000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const styles: Record<string, string> = {
-    info: "bg-blue-600",
-    success: "bg-green-600",
-    warning: "bg-yellow-600",
-    error: "bg-red-600",
+  const typeStyles = {
+    info: {
+      bg: "bg-blue-600 dark:bg-blue-500",
+      icon: "text-blue-100",
+      text: "text-white"
+    },
+    success: {
+      bg: "bg-green-600 dark:bg-green-500", 
+      icon: "text-green-100",
+      text: "text-white"
+    },
+    warning: {
+      bg: "bg-yellow-600 dark:bg-yellow-500",
+      icon: "text-yellow-100", 
+      text: "text-white"
+    },
+    error: {
+      bg: "bg-red-600 dark:bg-red-500",
+      icon: "text-red-100",
+      text: "text-white"
+    },
   };
 
   return (
-    <Ctx.Provider value={{ toasts, push, remove }}>
+    <Ctx.Provider value={{ toasts, push, remove, clear }}>
       {children}
-      <div aria-live="polite" aria-atomic="true" className="fixed inset-x-0 bottom-4 z-50 flex flex-col items-center gap-2 px-4">
-        {toasts.map((t) => (
-          <div
-            key={t.id}
-            role="status"
-            className={clsx(
-              "w-full max-w-sm rounded-md px-4 py-3 text-white shadow-lg focus:outline-none",
-              styles[t.type || "info"]
-            )}
-          >
-            <div className="flex items-start justify-between gap-3">
-              <p className="text-sm font-medium">{t.message}</p>
-              <button onClick={() => remove(t.id)} aria-label="Dismiss notification" className="text-white/80 hover:text-white">
-                ×
-              </button>
+      
+      {/* Toast Container */}
+      <div 
+        aria-live="polite" 
+        aria-atomic="true" 
+        className="fixed inset-x-0 bottom-4 z-50 flex flex-col items-center gap-2 px-4 pointer-events-none"
+      >
+        {toasts.map((toast) => {
+          const styles = typeStyles[toast.type || "info"];
+          
+          return (
+            <div
+              key={toast.id}
+              role="status"
+              className={clsx(
+                "w-full max-w-md rounded-lg shadow-lg pointer-events-auto",
+                "transform transition-all duration-300 ease-in-out",
+                "animate-slide-in-right",
+                styles.bg
+              )}
+            >
+              <div className="flex items-start gap-3 p-4">
+                {/* Icon */}
+                <div className={clsx("flex-shrink-0 mt-0.5", styles.icon)}>
+                  {ToastIcons[toast.type || "info"]}
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  <p className={clsx("text-sm font-medium leading-relaxed", styles.text)}>
+                    {toast.message}
+                  </p>
+                  
+                  {/* Action Button */}
+                  {toast.action && (
+                    <button
+                      onClick={toast.action.onClick}
+                      className={clsx(
+                        "mt-2 text-xs font-medium underline",
+                        styles.text,
+                        "hover:no-underline focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 rounded"
+                      )}
+                    >
+                      {toast.action.label}
+                    </button>
+                  )}
+                </div>
+
+                {/* Close Button */}
+                <button
+                  onClick={() => remove(toast.id)}
+                  aria-label="Dismiss notification"
+                  className={clsx(
+                    "flex-shrink-0 ml-2 rounded-md p-1 transition-colors duration-200",
+                    "hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50",
+                    styles.text
+                  )}
+                >
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                    <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Progress Bar */}
+              <div className="h-1 bg-white/20 rounded-b-lg overflow-hidden">
+                <div 
+                  className="h-full bg-white/40"
+                  style={{
+                    animation: `shrink-progress ${toast.duration}ms linear forwards`
+                  }}
+                />
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
+
+      <style jsx>{`
+        @keyframes shrink-progress {
+          from { width: 100%; }
+          to { width: 0%; }
+        }
+      `}</style>
     </Ctx.Provider>
   );
 }

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse, type RouteContext } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { BlogAPI } from "@/lib/api";
 
 /**
@@ -8,9 +8,10 @@ import { BlogAPI } from "@/lib/api";
  */
 export async function POST(
   req: NextRequest,
-  context: RouteContext<{ id: string }>
+  context: { params: Promise<{ id: string }> }
 ) {
-  const id = context?.params?.id;
+  const params = await context.params;
+  const id = params?.id;
   const form = await req.formData();
   const content = String(form.get("content") || "");
   if (!content || !id) {
