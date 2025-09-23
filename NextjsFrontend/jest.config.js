@@ -9,4 +9,9 @@ module.exports = {
   transform: {
     '^.+\\.(ts|tsx)$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.json', isolatedModules: true }],
   },
+  extensionsToTreatAsEsm: [],
+  transformIgnorePatterns: [
+    '/node_modules/(?!(react|react-dom)/)',
+  ],
 };
+
