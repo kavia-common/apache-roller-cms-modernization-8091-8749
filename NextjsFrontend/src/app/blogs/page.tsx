@@ -3,7 +3,9 @@ import Link from "next/link";
 
 export const revalidate = 30;
 
-export default async function BlogsPage({ searchParams }: { searchParams: { status?: string } }) {
+import type { PageProps } from "next";
+
+export default async function BlogsPage({ searchParams }: PageProps<unknown, { status?: string }>) {
   const status = searchParams?.status || "published";
   const [posts, err] = await withApiError(BlogAPI.list({ status, limit: 20 }));
 

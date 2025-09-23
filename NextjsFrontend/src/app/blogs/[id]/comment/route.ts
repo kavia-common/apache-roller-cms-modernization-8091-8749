@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, type RouteContext } from "next/server";
 import { BlogAPI } from "@/lib/api";
 
 /**
@@ -6,10 +6,11 @@ import { BlogAPI } from "@/lib/api";
  * PUBLIC_INTERFACE
  * POST /blogs/[id]/comment
  */
-export async function POST(req: NextRequest, context /* eslint-disable-line @typescript-eslint/no-unused-vars */) {
-  // Avoid typing the second arg in signature to satisfy Next.js validator; assert locally from unknown.
-  const ctx = context as unknown as { params?: { id?: string } };
-  const id = ctx?.params?.id;
+export async function POST(
+  req: NextRequest,
+  context: RouteContext<{ id: string }>
+) {
+  const id = context?.params?.id;
   const form = await req.formData();
   const content = String(form.get("content") || "");
   if (!content || !id) {

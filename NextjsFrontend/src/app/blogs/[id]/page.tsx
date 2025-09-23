@@ -2,7 +2,9 @@ import { BlogAPI, withApiError } from "@/lib/api";
 import TextArea from "@/components/ui/TextArea";
 import Button from "@/components/ui/Button";
 
-export default async function BlogDetailsPage({ params }: { params: { id: string } }) {
+import type { PageProps } from "next";
+
+export default async function BlogDetailsPage({ params }: PageProps<{ id: string }>) {
   const [post, err] = await withApiError(BlogAPI.get(params.id));
 
   if (err) {
